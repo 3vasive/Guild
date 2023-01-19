@@ -1,0 +1,9 @@
+name: Guild
+version: '${project.version}'
+main: me.evasive.guild.Guild
+api-version: 1.19
+depend: [RedLib]
+commands:
+  guild:
+    description: Guild commands
+    usage: /guild
