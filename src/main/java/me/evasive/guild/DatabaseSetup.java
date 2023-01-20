@@ -170,15 +170,15 @@ public class DatabaseSetup {
         int id = sql.querySingleResult("SELECT guild_id FROM Guilds WHERE UPPER(name) = UPPER(?);", name);
         //Leader
         for (String username : (List<String>) (Object) sql.queryResultList("SELECT username FROM Players WHERE guild_id=? AND guild_rank=4;", id)) {
-            usernameList.add("***"+username);
+            usernameList.add("✶✶✶"+username);
         }
         //Co-Leaders
         for (String username : (List<String>) (Object) sql.queryResultList("SELECT username FROM Players WHERE guild_id=? AND guild_rank=3;", id)) {
-            usernameList.add("**"+username);
+            usernameList.add("✶✶"+username);
         }
         //Mods
         for (String username : (List<String>) (Object) sql.queryResultList("SELECT username FROM Players WHERE guild_id=? AND guild_rank=2;", id)) {
-            usernameList.add("*"+username);
+            usernameList.add("✶"+username);
         }
         //Members
         for (String username : (List<String>) (Object) sql.queryResultList("SELECT username FROM Players WHERE guild_id=? AND guild_rank=1;", id)) {
