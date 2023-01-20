@@ -2,12 +2,11 @@ package me.evasive.guild;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import javax.xml.crypto.Data;
 
 public class GuildCommands implements CommandExecutor {
 
@@ -17,6 +16,10 @@ public class GuildCommands implements CommandExecutor {
         this.plugin = plugin;
         plugin.getCommand("Guild").setExecutor(this);
     }
+
+    ChatColor guildmessages = ChatColor.AQUA;
+    String output1 = guildmessages + "You are not in a guild";
+    String output2 = guildmessages + "You are already in a guild";
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -41,7 +44,7 @@ public class GuildCommands implements CommandExecutor {
                 case "leave":
                     //Checks if you are in a guild
                     if(!DatabaseSetup.CheckForGuild(player)) {
-                        sender.sendMessage("You are not in a guild");
+                        sender.sendMessage(output1);
                         break;
                     }
 
@@ -59,7 +62,7 @@ public class GuildCommands implements CommandExecutor {
                 case "disband":
                     //Checks if you are in a guild
                     if(!DatabaseSetup.CheckForGuild(player)) {
-                        sender.sendMessage("You are not in a guild");
+                        sender.sendMessage(output1);
                         break;
                     }
 
@@ -71,24 +74,18 @@ public class GuildCommands implements CommandExecutor {
                     //Disbands the guild
                     DatabaseSetup.DisbandGuild(player);
                     break;
+                case "who":
                 case "info":
                     //Shows your own guild in chat
 
                     //Checks if you are in a guild
                     if(!DatabaseSetup.CheckForGuild(player)) {
-                        sender.sendMessage("You are not in a guild");
+                        sender.sendMessage(output1);
                         break;
                     }
-                    sender.sendMessage(ChatColor.AQUA  + "________" + ChatColor.BOLD + DatabaseSetup.GetGuildName(player) + ChatColor.RESET + "" + ChatColor.AQUA + "________");
-                    sender.sendMessage("");
-                    sender.sendMessage(ChatColor.WHITE + "Guild Level: " + DatabaseSetup.GetGuildLevel(player));
-                    sender.sendMessage("");
-                    sender.sendMessage(ChatColor.WHITE + "Members: " + DatabaseSetup.GetGuildMembers(player));
-                    sender.sendMessage("");
-                    StringBuilder bottom = new StringBuilder();
-                    for (int i=0; i < DatabaseSetup.GetGuildName(player).length(); i++)
-                        bottom.append("_");
-                    sender.sendMessage("________________" + bottom);
+
+                    //Displays gang stuff
+                    ShowGangDisplay(sender, DatabaseSetup.GetGuildName(player));
                     break;
                 default:
                     sender.sendMessage("Do /guild help to find out the guild commands");
@@ -103,7 +100,7 @@ public class GuildCommands implements CommandExecutor {
                     case "create":
                         //Checks if player is already in a guild
                         if(DatabaseSetup.CheckForGuild(player)) {
-                            sender.sendMessage("You are already in a guild");
+                            sender.sendMessage(output2);
                             break;
                         }
 
@@ -133,7 +130,7 @@ public class GuildCommands implements CommandExecutor {
                         //Need to add check for online?
                         //Checks if you are in a guild
                         if(!DatabaseSetup.CheckForGuild(player)) {
-                            sender.sendMessage("You are not in a guild");
+                            sender.sendMessage(output1);
                             break;
                         }
 
@@ -151,6 +148,10 @@ public class GuildCommands implements CommandExecutor {
                             break;
                         }
 
+                        if(!otherPlayer.isOnline()){
+                            sender.sendMessage(args[1] + " is not online");
+                        }
+
                         DatabaseSetup.SendGuildInvite(player, otherPlayer);
                         otherPlayer.sendMessage("You have been invited to " + DatabaseSetup.GetGuildName(player));
                         sender.sendMessage("You invited " + args[1] + " to join " + DatabaseSetup.GetGuildName(player));
@@ -161,7 +162,7 @@ public class GuildCommands implements CommandExecutor {
 
                         //Checks if you are already in a guild
                         if(DatabaseSetup.CheckForGuild(player)) {
-                            sender.sendMessage("You are already in a guild");
+                            sender.sendMessage(output2);
                             break;
                         }
 
@@ -179,7 +180,17 @@ public class GuildCommands implements CommandExecutor {
                     case "kick":
                         //Checks if you are in a guild
                         if(!DatabaseSetup.CheckForGuild(player)) {
-                            sender.sendMessage("You are not in a guild");
+                            sender.sendMessage(output1);
+                            break;
+                        }
+
+                        if(!DatabaseSetup.CheckValidPlayer(args[1])){
+                            sender.sendMessage(args[1] + " is not in your guild");
+                            break;
+                        }
+
+                        if(!DatabaseSetup.CheckMatchingGuild(player, Bukkit.getOfflinePlayer(DatabaseSetup.GetPlayerUUID(args[1])))){
+                            sender.sendMessage(args[1] + " is not in your guild");
                             break;
                         }
 
@@ -193,17 +204,181 @@ public class GuildCommands implements CommandExecutor {
                         DatabaseSetup.KickFromGuild(Bukkit.getOfflinePlayer(DatabaseSetup.GetPlayerUUID(args[1])));
                         sender.sendMessage("You have kicked someone from the guild");
                         break;
+                    case "who":
                     case "info":
                         //Shows info on guild on next arg
-                        sender.sendMessage("This is the info on the guild");
+                        if(!ShowGangDisplay(sender, args[1])) {
+                            sender.sendMessage("There is no guild or player with the name " + args[1]);
+                        }
                         break;
                     case "mod":
+                        if(!DatabaseSetup.CheckForGuild(player)) {
+                            sender.sendMessage(output1);
+                            break;
+                        }
+
+                        OfflinePlayer modplayer = Bukkit.getOfflinePlayer(DatabaseSetup.GetPlayerUUID(args[1]));
+                        if (!DatabaseSetup.CheckMatchingGuild(player, modplayer)){
+                            sender.sendMessage("Player is not in your guild");
+                            break;
+                        }
+
                         //gives mod to selected player
-                        sender.sendMessage("You have given mod of the guild");
+                        if(DatabaseSetup.CheckGuildRank(player) <=2){
+                            sender.sendMessage("You do not have permission to give Mod in this guild");
+                            break;
+                        }
+                        //Checks if player is already mod
+
+                        if(DatabaseSetup.CheckGuildRank(modplayer) ==2){
+                            sender.sendMessage("Player already has Mod in this guild");
+                            break;
+                        }
+
+                        if(DatabaseSetup.CheckGuildRank(modplayer) >= DatabaseSetup.CheckGuildRank(player)){
+                            sender.sendMessage("You cannot edit this players rank in this Guild");
+                            break;
+                        }
+
+                        DatabaseSetup.SetMod(modplayer);
+                        sender.sendMessage("You have given " + modplayer.getName() + " Mod in the guild");
+                        if(modplayer.isOnline())
+                            modplayer.getPlayer().sendMessage("You have given Mod of the guild");
                         break;
                     case "coleader":
+                        if(!DatabaseSetup.CheckForGuild(player)) {
+                            sender.sendMessage(output1);
+                            break;
+                        }
+
+                        OfflinePlayer coplayer = Bukkit.getOfflinePlayer(DatabaseSetup.GetPlayerUUID(args[1]));
+                        if (!DatabaseSetup.CheckMatchingGuild(player, coplayer)){
+                            sender.sendMessage("Player is not in your guild");
+                            break;
+                        }
+
                         //gives mod to selected player
-                        sender.sendMessage("You have given co-leader of the guild");
+                        if(DatabaseSetup.CheckGuildRank(player) <=3){
+                            sender.sendMessage("You do not have permission to give Co-Leader in this guild");
+                            break;
+                        }
+                        //Checks if player is already mod
+
+                        if(DatabaseSetup.CheckGuildRank(coplayer) ==3){
+                            sender.sendMessage("Player already has Co-Leader in this guild");
+                            break;
+                        }
+
+                        if(DatabaseSetup.CheckGuildRank(coplayer) >= DatabaseSetup.CheckGuildRank(player)){
+                            sender.sendMessage("You cannot edit this players rank in this Guild");
+                            break;
+                        }
+
+                        DatabaseSetup.SetCo(coplayer);
+                        sender.sendMessage("You have given " + coplayer.getName() + " Co-Leader in the guild");
+                        if(coplayer.isOnline())
+                            coplayer.getPlayer().sendMessage("You have given Co-Leader of the guild");
+                        //gives mod to selected player
+                        break;
+
+                    case "leader":
+                        if(!DatabaseSetup.CheckForGuild(player)) {
+                            sender.sendMessage(output1);
+                            break;
+                        }
+
+                        OfflinePlayer leaderplayer = Bukkit.getOfflinePlayer(DatabaseSetup.GetPlayerUUID(args[1]));
+                        if (!DatabaseSetup.CheckMatchingGuild(player, leaderplayer)){
+                            sender.sendMessage("Player is not in your guild");
+                            break;
+                        }
+
+                        //gives mod to selected player
+                        if(DatabaseSetup.CheckGuildRank(player) <=3){
+                            sender.sendMessage("You do not have permission to give Leader in this guild");
+                            break;
+                        }
+                        //Checks if player is already mod
+
+                        if(DatabaseSetup.CheckGuildRank(leaderplayer) == 4){
+                            sender.sendMessage("Player already has Leader in this guild");
+                            break;
+                        }
+
+                        DatabaseSetup.SetLeader(leaderplayer, player);
+                        sender.sendMessage("You have given " + leaderplayer.getName() + " Leader in the guild");
+                        if(leaderplayer.isOnline())
+                            leaderplayer.getPlayer().sendMessage("You have been given Leader of the guild");
+                        //gives mod to selected player
+                        break;
+
+                    case "derank":
+                        //sets player back to member of guild
+                        if(!DatabaseSetup.CheckForGuild(player)) {
+                            sender.sendMessage(output1);
+                            break;
+                        }
+
+                        OfflinePlayer memberplayer = Bukkit.getOfflinePlayer(DatabaseSetup.GetPlayerUUID(args[1]));
+                        if (!DatabaseSetup.CheckMatchingGuild(player, memberplayer)){
+                            sender.sendMessage("Player is not in your guild");
+                            break;
+                        }
+
+                        //gives mod to selected player
+                        if(DatabaseSetup.CheckGuildRank(player) <=2){
+                            sender.sendMessage("You do not have permission to derank in this guild");
+                            break;
+                        }
+                        //Checks if player is already mod
+
+                        if(DatabaseSetup.CheckGuildRank(memberplayer) ==1){
+                            sender.sendMessage("Player already has Member in this guild");
+                            break;
+                        }
+
+                        if(DatabaseSetup.CheckGuildRank(memberplayer) >= DatabaseSetup.CheckGuildRank(player)){
+                            sender.sendMessage("You do not have permission to change this players rank");
+                            break;
+                        }
+
+                        DatabaseSetup.SetMember(memberplayer);
+                        sender.sendMessage("You have set " + memberplayer.getName() + " to Member in the guild");
+                        if(memberplayer.isOnline())
+                            memberplayer.getPlayer().sendMessage("You have been set to Member of the guild");
+                        //gives mod to selected player
+                        break;
+
+                    case "rename":
+                        if(!DatabaseSetup.CheckForGuild(player)) {
+                            sender.sendMessage(output1);
+                            break;
+                        }
+                        if(DatabaseSetup.CheckGuildRank(player) <=3){
+                            sender.sendMessage("You do not have permission to rename the guild");
+                            break;
+                        }
+
+                        //Check for valid characters only letters & numbers
+                        if(!args[1].matches("^[a-zA-Z0-9]*$")){
+                            sender.sendMessage("Guild names must only contain letters and numbers");
+                            break;
+                        }
+
+                        //Checks if guild name is the correct size
+                        if(args[1].length() <= 2 || args[1].length() >= 13){
+                            sender.sendMessage("Guild name must be between 3 and 12 characters");
+                            break;
+                        }
+
+                        //Checks if guild name is taken
+                        if(DatabaseSetup.CheckGuildName(args[1])){
+                            sender.sendMessage("This guild named " + args[1] + " already exists");
+                            break;
+                        }
+
+                        DatabaseSetup.RenameGuild(player, args[1]);
+                        sender.sendMessage("The guild has been renamed to " + args[1]);
                         break;
                     default:
                         sender.sendMessage("Do /guild help to find out the guild commands");
@@ -212,6 +387,25 @@ public class GuildCommands implements CommandExecutor {
             }
         }
         sender.sendMessage("Do /guild help to find out the guild commands {Outside}");
+        return true;
+    }
+
+
+
+    boolean ShowGangDisplay(CommandSender sender, String name){
+        String guild_name = DatabaseSetup.GuildSearch(name);
+        if (guild_name == null)
+            return false;
+        sender.sendMessage(ChatColor.AQUA  + "________" + ChatColor.BOLD + guild_name + ChatColor.RESET + "" + ChatColor.AQUA + "________");
+        sender.sendMessage("");
+        sender.sendMessage(ChatColor.WHITE + "Guild Level: " + DatabaseSetup.GetGuildLevel(guild_name));
+        sender.sendMessage("");
+        sender.sendMessage(ChatColor.WHITE + "Members: " + DatabaseSetup.GetGuildMembers(guild_name));
+        sender.sendMessage("");
+        StringBuilder bottom = new StringBuilder();
+        for (int i=0; i < guild_name.length(); i++)
+            bottom.append("_");
+        sender.sendMessage("________________" + bottom);
         return true;
     }
 }
