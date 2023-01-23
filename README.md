@@ -10,10 +10,10 @@ guild.basic - allows players to run guild commands
 Base guild commands\
 ![Commands](https://user-images.githubusercontent.com/58788631/214173921-a29adf78-cdf1-425c-829d-d2f7d1283094.png)\
 Guild bank commands\
-/guild bank balance
-/guild bank withdraw {amount}
+/guild bank balance\
+/guild bank withdraw {amount}\
 /guild bank deposit {amount}
 
-#requirements
-[Vault](https://www.spigotmc.org/resources/vault.34315/)
+# requirements
+[Vault](https://www.spigotmc.org/resources/vault.34315/)\
 [Redlib](https://www.spigotmc.org/resources/redlib.78713/)
