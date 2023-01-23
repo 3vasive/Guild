@@ -14,6 +14,6 @@ Guild bank commands\
 /guild bank withdraw {amount}\
 /guild bank deposit {amount}
 
-# requirements
+# Requirements
 [Vault](https://www.spigotmc.org/resources/vault.34315/)\
 [Redlib](https://www.spigotmc.org/resources/redlib.78713/)
