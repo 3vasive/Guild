@@ -1,5 +1,6 @@
 package me.evasive.guild;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerFishEvent;
@@ -7,6 +8,7 @@ import redempt.redlib.sql.SQLHelper;
 
 import java.io.File;
 import java.sql.Connection;
+import java.text.NumberFormat;
 import java.util.*;
 
 
@@ -14,16 +16,27 @@ public class DatabaseSetup {
 
     private static SQLHelper sql;
     private static Map<UUID, List> invites = new HashMap<>();
+    private static Map<UUID, Boolean> togglechat = new HashMap<>();
 
     public static void SetupDatabase() {
         File dataFolder = Guild.getPlugin().getDataFolder();
         dataFolder.mkdir();
         Connection connection = SQLHelper.openSQLite(dataFolder.toPath().resolve("guilds.db"));
         sql = new SQLHelper(connection);
+        //Guild Table
         sql.execute("CREATE TABLE IF NOT EXISTS Guilds (" +
                 "guild_id INTEGER PRIMARY KEY," +
                 "name STRING UNIQUE NOT NULL," +
-                "level INTEGER);");
+                "level INTEGER," +
+                "balance BIGINT);");
+        //Guild Missions Table
+        sql.execute("CREATE TABLE IF NOT EXISTS GUpgrades (" +
+                "guild_id INTEGER PRIMARY KEY," +
+                "mining_blocks INTEGER," +
+                "monster_slayer INTEGER);");
+        //Guild Upgrades
+
+        //Player Table
         sql.execute("CREATE TABLE IF NOT EXISTS Players (" +
                 "uuid varchar(36) PRIMARY KEY," +
                 "username STRING," +
@@ -37,6 +50,7 @@ public class DatabaseSetup {
     public static void OnPlayerJoin(Player player) {
         List inv = new ArrayList();
         invites.put(player.getUniqueId(), inv);
+        togglechat.put(player.getUniqueId(), false);
         try {
             sql.execute("INSERT INTO Players (uuid, username, player_level, guild_id, guild_rank) VALUES(?, ?, 1, 0, 0);", player.getUniqueId(), player.getName());
         } catch (Exception e) {
@@ -48,7 +62,7 @@ public class DatabaseSetup {
 
     //-------Guild Functions-------//
     public static void CreateGuild(OfflinePlayer offlinePlayer, String name) {
-        sql.execute("INSERT INTO Guilds (name, level) VALUES(?, 1);", name);
+        sql.execute("INSERT INTO Guilds (name, level, balance) VALUES(?, 1, 0);", name);
         sql.execute("UPDATE Players SET guild_id = ?, guild_rank = 4 WHERE uuid = ?;", sql.querySingleResult("SELECT guild_id FROM Guilds WHERE name = ?;", name), offlinePlayer.getUniqueId());
     }
 
@@ -74,7 +88,9 @@ public class DatabaseSetup {
         int id = sql.querySingleResult("SELECT guild_id FROM Guilds WHERE UPPER(name) = UPPER(?);", name);
         sql.execute("UPDATE Players SET guild_rank = 1 WHERE uuid = ?;", player.getUniqueId());
         sql.execute("UPDATE Players SET guild_id = ? WHERE uuid = ?;", id, player.getUniqueId());
-        invites.remove(player.getUniqueId());
+        List inv = invites.get(player.getUniqueId());
+        inv.clear();
+        invites.put(player.getUniqueId(), inv);
     }
 
     public static void KickFromGuild (OfflinePlayer offlinePlayer){
@@ -102,6 +118,33 @@ public class DatabaseSetup {
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
         sql.execute("UPDATE Guilds SET name = ? WHERE guild_id = ?;", name, id);
     }
+
+    //FIX
+    public static boolean ChatToggle(OfflinePlayer player){
+        Boolean chat = togglechat.get(player.getUniqueId());
+        if (chat){
+            togglechat.put(player.getUniqueId(), false);
+            return false;
+        }
+        togglechat.put(player.getUniqueId(), true);
+        return true;
+    }
+
+    public static void AddBalance(OfflinePlayer player, long amount){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        long total = sql.querySingleResultLong("SELECT balance FROM Guilds WHERE guild_id = ?;", id);
+        total+=amount;
+        sql.execute("UPDATE Guilds SET balance = ? WHERE guild_id = ?;", total, id);
+    }
+
+    public static void RemoveBalance(OfflinePlayer player, long amount){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        long total = sql.querySingleResultLong("SELECT balance FROM Guilds WHERE guild_id = ?;", id);
+        total-=amount;
+        sql.execute("UPDATE Guilds SET balance = ? WHERE guild_id = ?;", total, id);
+    }
+
+
     //----------------------------//
 
 
@@ -148,6 +191,16 @@ public class DatabaseSetup {
             return true;
         return false;
     }
+
+    public static boolean CheckCurrentChat(OfflinePlayer player){
+        return togglechat.get(player.getUniqueId());
+    }
+
+    public static String ConvertBlance(long balance){
+        long bal = balance;
+        String converted = NumberFormat.getIntegerInstance(Locale.US).format(bal);
+        return converted;
+    }
     //----------------------------//
 
 
@@ -163,6 +216,15 @@ public class DatabaseSetup {
     public static int GetGuildLevel (String name){
         int level = sql.querySingleResult("SELECT level from Guilds WHERE UPPER(name) = UPPER(?);", name);
         return level;
+    }
+
+    public static List<UUID> GetGuildUUIDS(OfflinePlayer player){
+        List<UUID> uuids = new ArrayList<>();
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        for (String string : (List<String>) (Object) sql.queryResultList("SELECT uuid FROM Players WHERE guild_id=?;", id)) {
+            uuids.add(UUID.fromString(string));
+        }
+        return uuids;
     }
 
     public static List<String> GetGuildMembers(String name) {
@@ -186,6 +248,11 @@ public class DatabaseSetup {
         }
         return usernameList;
     }
+
+    public static long GetBalance(String name){
+        long balance = sql.querySingleResultLong("SELECT balance FROM Guilds WHERE name = ?;", name);
+        return balance;
+    }
     //----------------------------//
 
 
@@ -195,9 +262,9 @@ public class DatabaseSetup {
     public static String GuildSearch (String searchedName){
         String name = null;
         if(CheckGuildName(searchedName)) {
-            name = sql.querySingleResult("SELECT name FROM Guilds WHERE UPPER(name) = UPPER(?)", searchedName);
+            name = sql.querySingleResult("SELECT name FROM Guilds WHERE UPPER(name) = UPPER(?);", searchedName);
         }
-        if(sql.querySingleResult("SELECT guild_id FROM Players WHERE UPPER(username) = UPPER(?)", searchedName) != null){
+        if(sql.querySingleResult("SELECT guild_id FROM Players WHERE UPPER(username) = UPPER(?);", searchedName) != null){
             name = sql.querySingleResult("SELECT name FROM Guilds WHERE guild_id = ?;", sql.querySingleResult("SELECT guild_id FROM Players WHERE UPPER(username) = UPPER(?);", searchedName) != null);
         }
         return name;
