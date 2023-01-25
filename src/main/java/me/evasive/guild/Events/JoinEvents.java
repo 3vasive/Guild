@@ -1,9 +1,10 @@
-package me.evasive.guild;
+package me.evasive.guild.Events;
 
+import me.evasive.guild.Database.GuildManager;
+import me.evasive.guild.Guild;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -21,17 +22,17 @@ public class JoinEvents implements Listener {
 
     @EventHandler
     public void PlayerJoinEvent(PlayerJoinEvent e) {
-        DatabaseSetup.OnPlayerJoin(e.getPlayer());
+        GuildManager.OnPlayerJoin(e.getPlayer());
     }
 
     @EventHandler
     public void PlayerChatEvent(AsyncPlayerChatEvent e){
-        if(DatabaseSetup.CheckCurrentChat(e.getPlayer())){
+        if(GuildManager.CheckCurrentChat(e.getPlayer())){
             String message = e.getMessage();
             String name = e.getPlayer().getName();
             e.setCancelled(true);
             String finalmessage = ChatColor.AQUA + "[G] " + name + ":" + ChatColor.WHITE + " " + message;
-            List<UUID> players = DatabaseSetup.GetGuildUUIDS(e.getPlayer());
+            List<UUID> players = GuildManager.GetGuildUUIDS(e.getPlayer());
             for (int i = 0; i < players.size(); i++){
                 UUID current = players.get(i);
                 OfflinePlayer currentplayer = Bukkit.getOfflinePlayer(current);

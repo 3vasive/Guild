@@ -1,9 +1,11 @@
 package me.evasive.guild;
 
+import me.evasive.guild.Commands.GuildCommands;
+import me.evasive.guild.Database.GuildManager;
+import me.evasive.guild.Events.CollectionEvents;
+import me.evasive.guild.Events.JoinEvents;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
-import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -18,9 +20,10 @@ public final class Guild extends JavaPlugin {
         PluginManager pluginManager = getServer().getPluginManager();
         // Plugin startup logic
         plugin = this;
-        DatabaseSetup.SetupDatabase();
+        GuildManager.SetupDatabase();
         new GuildCommands(this);
         pluginManager.registerEvents(new JoinEvents(this), this);
+        pluginManager.registerEvents(new CollectionEvents(this), this);
 
         //Econ stuff
         if (!setupEconomy() ) {
