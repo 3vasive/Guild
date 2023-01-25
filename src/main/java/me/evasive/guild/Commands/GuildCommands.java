@@ -13,9 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.text.NumberFormat;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 
 public class GuildCommands implements CommandExecutor {
 
@@ -23,7 +21,7 @@ public class GuildCommands implements CommandExecutor {
 
     public GuildCommands(Guild plugin) {
         this.plugin = plugin;
-        plugin.getCommand("Guild").setExecutor(this);
+        Objects.requireNonNull(plugin.getCommand("Guild")).setExecutor(this);
     }
 
     ChatColor guildmessages = ChatColor.AQUA;
@@ -577,7 +575,6 @@ public class GuildCommands implements CommandExecutor {
         return true;
     }
 
-
     boolean ShowGangDisplay(CommandSender sender, String name) {
         String guild_name = GuildManager.GuildSearch(name);
         if (guild_name == null)
@@ -615,11 +612,10 @@ public class GuildCommands implements CommandExecutor {
         sender.sendMessage(guildmessages + "----------------------------------------------------");
     }
 
-    void AlertGuild(List<UUID> players, String message){
-        for (int i = 0; i < players.size(); i++){
-            UUID current = players.get(i);
+    public static void AlertGuild(List<UUID> players, String message){
+        for (UUID current : players) {
             OfflinePlayer currentplayer = Bukkit.getOfflinePlayer(current);
-            if(currentplayer.isOnline()){
+            if (currentplayer.isOnline()) {
                 currentplayer.getPlayer().sendMessage(message);
             }
         }

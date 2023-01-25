@@ -4,6 +4,7 @@ import me.evasive.guild.Commands.GuildCommands;
 import me.evasive.guild.Database.GuildManager;
 import me.evasive.guild.Events.CollectionEvents;
 import me.evasive.guild.Events.JoinEvents;
+import me.evasive.guild.TaskCreator.Tasks;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.PluginManager;
@@ -24,7 +25,7 @@ public final class Guild extends JavaPlugin {
         new GuildCommands(this);
         pluginManager.registerEvents(new JoinEvents(this), this);
         pluginManager.registerEvents(new CollectionEvents(this), this);
-
+        Tasks.LoadTasks();
         //Econ stuff
         if (!setupEconomy() ) {
             getServer().getConsoleSender().sendMessage(("Disabled due to no Vault dependency found!"));

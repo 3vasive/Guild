@@ -3,6 +3,7 @@ package me.evasive.guild.Events;
 import com.jeff_media.customblockdata.CustomBlockData;
 import me.evasive.guild.Database.GuildManager;
 import me.evasive.guild.Guild;
+import me.evasive.guild.TaskCreator.Tasks;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
@@ -13,7 +14,6 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.EnumSet;
-import java.util.UUID;
 
 public class CollectionEvents implements Listener {
 
@@ -35,18 +35,21 @@ public class CollectionEvents implements Listener {
         CustomBlockData customBlockData = new CustomBlockData(e.getBlock(), this.plugin);
         if (customBlockData.has(key, PersistentDataType.STRING))
             return;
-        if (e.getBlock().getType().equals(Material.COAL_ORE))
+        if (e.getBlock().getType().equals(Material.COAL_ORE) && GuildManager.GetCoal(e.getPlayer()) < Tasks.Mining1.getPart1())
             GuildManager.IncreaseCoal(e.getPlayer());
-        if (e.getBlock().getType().equals(Material.IRON_ORE))
+        if (e.getBlock().getType().equals(Material.IRON_ORE) && GuildManager.GetIron(e.getPlayer()) < Tasks.Mining1.getPart2())
             GuildManager.IncreaseIron(e.getPlayer());
-        if (e.getBlock().getType().equals(Material.GOLD_ORE))
+        if (e.getBlock().getType().equals(Material.GOLD_ORE) && GuildManager.GetGold(e.getPlayer()) < Tasks.Mining1.getPart3())
             GuildManager.IncreaseGold(e.getPlayer());
-        if (e.getBlock().getType().equals(Material.DIAMOND_ORE))
+        if (e.getBlock().getType().equals(Material.DIAMOND_ORE) && GuildManager.GetDiamond(e.getPlayer()) < Tasks.Mining1.getPart4())
             GuildManager.IncreaseDiamond(e.getPlayer());
-        if (e.getBlock().getType().equals(Material.EMERALD_ORE))
+        if (e.getBlock().getType().equals(Material.EMERALD_ORE) && GuildManager.GetEmerald(e.getPlayer()) < Tasks.Mining1.getPart5())
             GuildManager.IncreaseEmerald(e.getPlayer());
-        if (e.getBlock().getType().equals(Material.ANCIENT_DEBRIS))
+        if (e.getBlock().getType().equals(Material.ANCIENT_DEBRIS) && GuildManager.GetNetherite(e.getPlayer()) < Tasks.Mining1.getPart6())
             GuildManager.IncreaseNetherite(e.getPlayer());
+        if(Tasks.CheckCompleteTasks(e.getPlayer())){
+            GuildManager.IncreaseMiningTier(e.getPlayer());
+        }
     }
 
     @EventHandler
