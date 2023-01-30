@@ -316,7 +316,19 @@ public class GuildManager {
         return tier;
     }
 
-    public static void ClearCollections(OfflinePlayer player){
+    public static int GetSlayerTier(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int tier = sql.querySingleResult("SELECT monster_slayer FROM GMissions WHERE guild_id = ?;", id);
+        return tier;
+    }
+
+    public static int GetBossTier(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int tier = sql.querySingleResult("SELECT boss_slayer FROM GMissions WHERE guild_id = ?;", id);
+        return tier;
+    }
+
+    public static void ClearMiningCollection(OfflinePlayer player){
         ClearCoal(player);
         ClearIron(player);
         ClearGold(player);
@@ -325,18 +337,46 @@ public class GuildManager {
         ClearNetherite(player);
     }
 
+    public static void ClearSlayerCollection(OfflinePlayer player){
+        ClearZombie(player);
+        ClearSkeleton(player);
+        ClearSpider(player);
+        ClearEnderman(player);
+        ClearCreeper(player);
+        ClearWitherSkeleton(player);
+    }
+
+    public static void ClearBossCollection(OfflinePlayer player){
+        ClearEndCrystal(player);
+        ClearEnderDragon(player);
+        ClearWither(player);
+        ClearElderGuardian(player);
+        ClearWarden(player);
+    }
+
     public static void IncreaseMiningTier(OfflinePlayer player){
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
         int tier = sql.querySingleResult("SELECT ore_collector FROM GMissions WHERE guild_id = ?;", id);
         tier += 1;
-        ClearCollections(player);
+        ClearMiningCollection(player);
         sql.execute("UPDATE GMissions SET ore_collector = ? WHERE guild_id = ?;",tier , id);
     }
 
-    public static int CheckMiningTier(OfflinePlayer player){
+
+    public static void IncreaseSlayerTier(OfflinePlayer player){
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
-        int tier = sql.querySingleResult("SELECT ore_collector FROM GMissions WHERE guild_id = ?;", id);
-        return tier;
+        int tier = sql.querySingleResult("SELECT monster_slayer FROM GMissions WHERE guild_id = ?;", id);
+        tier += 1;
+        ClearSlayerCollection(player);
+        sql.execute("UPDATE GMissions SET monster_slayer = ? WHERE guild_id = ?;",tier , id);
+    }
+
+    public static void IncreaseBossTier(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int tier = sql.querySingleResult("SELECT boss_slayer FROM GMissions WHERE guild_id = ?;", id);
+        tier += 1;
+        ClearBossCollection(player);
+        sql.execute("UPDATE GMissions SET boss_slayer = ? WHERE guild_id = ?;",tier , id);
     }
     //----------------------------//
 
@@ -449,10 +489,32 @@ public class GuildManager {
         sql.execute("UPDATE Tracking SET zombie = ? WHERE guild_id = ?;", amount + 1, id);
     }
 
+    public static int GetZombie(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT zombie FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearZombie(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET zombie = ? WHERE guild_id = ?;", 0, id);
+    }
+
     public static void IncreaseSkeleton(OfflinePlayer player){
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
         int amount = sql.querySingleResult("SELECT skeleton FROM Tracking WHERE guild_id = ?;", id);
         sql.execute("UPDATE Tracking SET skeleton = ? WHERE guild_id = ?;", amount + 1, id);
+    }
+
+    public static int GetSkeleton(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT skeleton FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearSkeleton(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET skeleton = ? WHERE guild_id = ?;", 0, id);
     }
 
     public static void IncreaseCreeper(OfflinePlayer player){
@@ -461,10 +523,32 @@ public class GuildManager {
         sql.execute("UPDATE Tracking SET creeper = ? WHERE guild_id = ?;", amount + 1, id);
     }
 
+    public static int GetCreeper(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT creeper FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearCreeper(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET creeper = ? WHERE guild_id = ?;", 0, id);
+    }
+
     public static void IncreaseEnderman(OfflinePlayer player){
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
         int amount = sql.querySingleResult("SELECT enderman FROM Tracking WHERE guild_id = ?;", id);
         sql.execute("UPDATE Tracking SET enderman = ? WHERE guild_id = ?;", amount + 1, id);
+    }
+
+    public static int GetEnderman(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT enderman FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearEnderman(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET enderman = ? WHERE guild_id = ?;", 0, id);
     }
 
     public static void IncreaseSpider(OfflinePlayer player){
@@ -473,10 +557,15 @@ public class GuildManager {
         sql.execute("UPDATE Tracking SET spider = ? WHERE guild_id = ?;", amount + 1, id);
     }
 
-    public static void IncreaseShulker(OfflinePlayer player){
+    public static int GetSpider(OfflinePlayer player){
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
-        int amount = sql.querySingleResult("SELECT shulker FROM Tracking WHERE guild_id = ?;", id);
-        sql.execute("UPDATE Tracking SET shulker = ? WHERE guild_id = ?;", amount + 1, id);
+        int amount = sql.querySingleResult("SELECT spider FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearSpider(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET spider = ? WHERE guild_id = ?;", 0, id);
     }
 
     public static void IncreaseWitherSkeleton(OfflinePlayer player){
@@ -485,10 +574,32 @@ public class GuildManager {
         sql.execute("UPDATE Tracking SET wither_skeleton = ? WHERE guild_id = ?;", amount + 1, id);
     }
 
+    public static int GetWitherSkeleton(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT wither_skeleton FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearWitherSkeleton(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET wither_skeleton = ? WHERE guild_id = ?;", 0, id);
+    }
+
     public static void IncreaseWither(OfflinePlayer player){
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
         int amount = sql.querySingleResult("SELECT wither FROM Tracking WHERE guild_id = ?;", id);
         sql.execute("UPDATE Tracking SET wither = ? WHERE guild_id = ?;", amount + 1, id);
+    }
+
+    public static int GetWither(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT wither FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearWither(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET wither = ? WHERE guild_id = ?;", 0, id);
     }
 
     public static void IncreaseEnderDragon(OfflinePlayer player){
@@ -497,10 +608,32 @@ public class GuildManager {
         sql.execute("UPDATE Tracking SET ender_dragon = ? WHERE guild_id = ?;", amount + 1, id);
     }
 
+    public static int GetEnderDragon(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT ender_dragon FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearEnderDragon(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET ender_dragon = ? WHERE guild_id = ?;", 0, id);
+    }
+
     public static void IncreaseEndCrystal(OfflinePlayer player){
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
         int amount = sql.querySingleResult("SELECT end_crystal FROM Tracking WHERE guild_id = ?;", id);
         sql.execute("UPDATE Tracking SET end_crystal = ? WHERE guild_id = ?;", amount + 1, id);
+    }
+
+    public static int GetEndCrystal(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT end_crystal FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearEndCrystal(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET end_crystal = ? WHERE guild_id = ?;", 0, id);
     }
 
     public static void IncreaseElderGuardian(OfflinePlayer player){
@@ -509,10 +642,32 @@ public class GuildManager {
         sql.execute("UPDATE Tracking SET elder_guardian = ? WHERE guild_id = ?;", amount + 1, id);
     }
 
+    public static int GetElderGuardian(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT elder_guardian FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearElderGuardian(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET elder_guardian = ? WHERE guild_id = ?;", 0, id);
+    }
+
     public static void IncreaseWarden(OfflinePlayer player){
         int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
         int amount = sql.querySingleResult("SELECT warden FROM Tracking WHERE guild_id = ?;", id);
         sql.execute("UPDATE Tracking SET warden = ? WHERE guild_id = ?;", amount + 1, id);
+    }
+
+    public static int GetWarden(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        int amount = sql.querySingleResult("SELECT warden FROM Tracking WHERE guild_id = ?;", id);
+        return amount;
+    }
+
+    public static void ClearWarden(OfflinePlayer player){
+        int id = sql.querySingleResult("SELECT guild_id FROM Players WHERE uuid = ?;", player.getUniqueId());
+        sql.execute("UPDATE Tracking SET warden = ? WHERE guild_id = ?;", 0, id);
     }
 
     public static void IncreaseWheat(OfflinePlayer player){

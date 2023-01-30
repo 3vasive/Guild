@@ -12,5 +12,6 @@ public class Task {
     private Integer part4 = 0;
     private Integer part5 = 0;
     private Integer part6 = 0;
+    private Integer experience = 0;
 }
 
